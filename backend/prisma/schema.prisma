@@ -1,0 +1,220 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  fullName      String
+  avatarUrl     String?
+  timezone      String         @default("UTC")
+  energyLevel   Int            @default(3)
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  tasks         Task[]
+  schedules     ScheduleBlock[]
+  habits        Habit[]
+  goals         Goal[]
+  exams         Exam[]
+  studyPlans    StudyPlan[]
+  dietLogs      DietLog[]
+  waterLogs     WaterLog[]
+  focusSessions FocusSession[]
+  notes         Note[]
+  aiChats       AiConversation[]
+  notifications Notification[]
+
+  @@index([email])
+}
+
+model Task {
+  id               String          @id @default(uuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  priority         Priority        @default(MEDIUM)
+  status           TaskStatus      @default(TODO)
+  estimatedMinutes Int?
+  dueDate          DateTime?
+  completedAt      DateTime?
+  tags             String[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  scheduleBlocks   ScheduleBlock[]
+
+  @@index([userId, status])
+  @@index([userId, dueDate])
+}
+
+model ScheduleBlock {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId        String?
+  task          Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  title         String
+  startTime     DateTime
+  endTime       DateTime
+  isAiGenerated Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+model Habit {
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  frequency   String
+  targetCount Int        @default(1)
+  streakCount Int        @default(0)
+  createdAt   DateTime   @default(now())
+  logs        HabitLog[]
+}
+
+model HabitLog {
+  id       String   @id @default(uuid())
+  habitId  String
+  habit    Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  loggedAt DateTime @default(now())
+  value    Int      @default(1)
+}
+
+model Goal {
+  id         String      @id @default(uuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  category   String
+  targetDate DateTime?
+  progress   Float       @default(0.0)
+  milestones Milestone[]
+  createdAt  DateTime    @default(now())
+}
+
+model Milestone {
+  id          String  @id @default(uuid())
+  goalId      String
+  goal        Goal    @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  title       String
+  isCompleted Boolean @default(false)
+}
+
+model Exam {
+  id         String      @id @default(uuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject    String
+  examDate   DateTime
+  topics     String[]
+  studyPlans StudyPlan[]
+}
+
+model StudyPlan {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  examId      String?
+  exam        Exam?    @relation(fields: [examId], references: [id], onDelete: SetNull)
+  topic       String
+  scheduledAt DateTime
+  isCompleted Boolean  @default(false)
+}
+
+model DietLog {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealType     String
+  foodName     String
+  calories     Int
+  proteinGrams Float?
+  loggedAt     DateTime @default(now())
+}
+
+model WaterLog {
+  id       String   @id @default(uuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountMl Int
+  loggedAt DateTime @default(now())
+}
+
+model FocusSession {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  durationMin  Int
+  distractions Int      @default(0)
+  completedAt  DateTime @default(now())
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  tags      String[]
+  isAudio   Boolean  @default(false)
+  audioUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AiConversation {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String      @default("New Conversation")
+  createdAt DateTime    @default(now())
+  messages  AiMessage[]
+}
+
+model AiMessage {
+  id             String         @id @default(uuid())
+  conversationId String
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         String
+  content        String
+  createdAt      DateTime       @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
