@@ -7,6 +7,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ==========================================
+// ENUMS
+// ==========================================
+
 enum Role {
   USER
   ADMIN
@@ -23,198 +27,610 @@ enum TaskStatus {
   TODO
   IN_PROGRESS
   COMPLETED
+  CANCELLED
   ARCHIVED
 }
 
-model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  passwordHash  String
-  fullName      String
-  avatarUrl     String?
-  timezone      String         @default("UTC")
-  energyLevel   Int            @default(3)
-  role          Role           @default(USER)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
-  tasks         Task[]
-  schedules     ScheduleBlock[]
-  habits        Habit[]
-  goals         Goal[]
-  exams         Exam[]
-  studyPlans    StudyPlan[]
-  dietLogs      DietLog[]
-  waterLogs     WaterLog[]
-  focusSessions FocusSession[]
-  notes         Note[]
-  aiChats       AiConversation[]
-  notifications Notification[]
-
-  @@index([email])
+enum RecurrenceInterval {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  YEARLY
+  CUSTOM
 }
 
-model Task {
-  id               String          @id @default(uuid())
-  userId           String
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title            String
-  description      String?
-  priority         Priority        @default(MEDIUM)
-  status           TaskStatus      @default(TODO)
-  estimatedMinutes Int?
-  dueDate          DateTime?
-  completedAt      DateTime?
-  tags             String[]
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+enum HabitFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
 
-  scheduleBlocks   ScheduleBlock[]
+enum GoalStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  ABANDONED
+}
+
+enum GoalCategory {
+  CAREER
+  FITNESS
+  FINANCE
+  LEARNING
+  PERSONAL
+  RELATIONSHIPS
+  HEALTH
+  OTHER
+}
+
+enum ExamStatus {
+  UPCOMING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum MealType {
+  BREAKFAST
+  BRUNCH
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum ReminderType {
+  TASK
+  CALENDAR_EVENT
+  EXAM
+  HABIT
+  WATER
+  CUSTOM
+}
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  EMAIL
+}
+
+enum NotificationType {
+  REMINDER
+  MORNING_BRIEFING
+  NIGHT_REVIEW
+  GOAL_MILESTONE
+  HABIT_STREAK
+  SYSTEM_ALERT
+}
+
+enum FocusType {
+  POMODORO
+  SHORT_BREAK
+  LONG_BREAK
+  DEEP_WORK
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
+
+// ==========================================
+// USER & PREFERENCES
+// ==========================================
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  avatarUrl    String?
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  preference     UserPreference?
+  categories     Category[]
+  tasks          Task[]
+  calendarEvents CalendarEvent[]
+  reminders      Reminder[]
+  habits         Habit[]
+  goals          Goal[]
+  subjects       Subject[]
+  exams          Exam[]
+  studyPlans     StudyPlan[]
+  mealPlans      MealPlan[]
+  groceryItems   GroceryItem[]
+  waterLogs      WaterLog[]
+  focusSessions  FocusSession[]
+  notes          Note[]
+  notifications  Notification[]
+  aiChats        AIConversation[]
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+model UserPreference {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme                  String   @default("dark")
+  timezone               String   @default("UTC")
+  energyLevel            Int      @default(3) // 1-5 scale for AI scheduling
+  morningBriefingEnabled Boolean  @default(true)
+  morningBriefingTime    String   @default("07:00")
+  nightReviewEnabled     Boolean  @default(true)
+  nightReviewTime        String   @default("21:00")
+  quietHoursStart        String?
+  quietHoursEnd          String?
+  dailyWaterTargetMl     Int      @default(2500)
+  defaultPomodoroLength  Int      @default(25)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String?
+  icon      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasks Task[]
+  notes Note[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+// ==========================================
+// TASKS & SUBTASKS
+// ==========================================
+
+model Task {
+  id                 String              @id @default(uuid())
+  userId             String
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId         String?
+  category           Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  title              String
+  description        String?
+  priority           Priority            @default(MEDIUM)
+  status             TaskStatus          @default(TODO)
+  estimatedMinutes   Int?
+  actualMinutes      Int?
+  dueDate            DateTime?
+  dueTime            String?             // e.g. "14:30"
+  isAllDay           Boolean             @default(false)
+  completedAt        DateTime?
+  tags               String[]            @default([])
+  isRecurring        Boolean             @default(false)
+  recurrenceInterval RecurrenceInterval?
+  recurrenceRule     String?             // iCal RRULE pattern for complex repeats
+  parentTaskId       String?
+  parentTask         Task?               @relation("TaskRecurringInstances", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  calendarEventId    String?
+  calendarEvent      CalendarEvent?      @relation(fields: [calendarEventId], references: [id], onDelete: SetNull)
+  goalMilestoneId    String?
+  goalMilestone      GoalMilestone?      @relation(fields: [goalMilestoneId], references: [id], onDelete: SetNull)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  recurringInstances Task[]              @relation("TaskRecurringInstances")
+  subTasks           SubTask[]
+  reminders          Reminder[]
+  focusSessions      FocusSession[]
 
   @@index([userId, status])
   @@index([userId, dueDate])
+  @@index([userId, priority])
+  @@index([parentTaskId])
 }
 
-model ScheduleBlock {
+model SubTask {
+  id          String    @id @default(uuid())
+  taskId      String
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title       String
+  isCompleted Boolean   @default(false)
+  order       Int       @default(0)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([taskId])
+}
+
+// ==========================================
+// CALENDAR & REMINDERS
+// ==========================================
+
+model CalendarEvent {
   id            String   @id @default(uuid())
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  taskId        String?
-  task          Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
   title         String
+  description   String?
+  location      String?
   startTime     DateTime
   endTime       DateTime
+  isAllDay      Boolean  @default(false)
   isAiGenerated Boolean  @default(false)
+  color         String?
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tasks     Task[]
+  reminders Reminder[]
+
+  @@index([userId, startTime])
+  @@index([userId, endTime])
 }
 
+model Reminder {
+  id              String              @id @default(uuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId          String?
+  task            Task?               @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  calendarEventId String?
+  calendarEvent   CalendarEvent?      @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
+  examId          String?
+  exam            Exam?               @relation(fields: [examId], references: [id], onDelete: Cascade)
+  habitId         String?
+  habit           Habit?              @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  title           String
+  reminderType    ReminderType        @default(CUSTOM)
+  channel         NotificationChannel @default(IN_APP)
+  triggerTime     DateTime
+  isSent          Boolean             @default(false)
+  sentAt          DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([userId, triggerTime, isSent])
+  @@index([taskId])
+  @@index([calendarEventId])
+  @@index([examId])
+  @@index([habitId])
+}
+
+// ==========================================
+// HABITS & HABIT LOGS
+// ==========================================
+
 model Habit {
-  id          String     @id @default(uuid())
-  userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title       String
-  frequency   String
-  targetCount Int        @default(1)
-  streakCount Int        @default(0)
-  createdAt   DateTime   @default(now())
-  logs        HabitLog[]
+  id            String         @id @default(uuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  frequency     HabitFrequency @default(DAILY)
+  targetCount   Int            @default(1)
+  unit          String?        // e.g. "pages", "glasses", "minutes"
+  color         String?
+  icon          String?
+  currentStreak Int            @default(0)
+  bestStreak    Int            @default(0)
+  isArchived    Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  logs      HabitLog[]
+  reminders Reminder[]
+
+  @@index([userId, isArchived])
 }
 
 model HabitLog {
-  id       String   @id @default(uuid())
-  habitId  String
-  habit    Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
-  loggedAt DateTime @default(now())
-  value    Int      @default(1)
+  id             String   @id @default(uuid())
+  habitId        String
+  habit          Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date           DateTime // Normalized to midnight UTC
+  completedCount Int      @default(1)
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  @@unique([habitId, date])
+  @@index([habitId])
+  @@index([date])
 }
+
+// ==========================================
+// GOALS & MILESTONES
+// ==========================================
 
 model Goal {
-  id         String      @id @default(uuid())
-  userId     String
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title      String
-  category   String
-  targetDate DateTime?
-  progress   Float       @default(0.0)
-  milestones Milestone[]
-  createdAt  DateTime    @default(now())
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  category    GoalCategory  @default(PERSONAL)
+  status      GoalStatus    @default(NOT_STARTED)
+  priority    Priority      @default(MEDIUM)
+  progress    Float         @default(0.0) // 0 to 100%
+  targetDate  DateTime?
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  milestones GoalMilestone[]
+
+  @@index([userId, status])
+  @@index([userId, category])
+  @@index([userId, targetDate])
 }
 
-model Milestone {
-  id          String  @id @default(uuid())
+model GoalMilestone {
+  id          String    @id @default(uuid())
   goalId      String
-  goal        Goal    @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
   title       String
-  isCompleted Boolean @default(false)
+  dueDate     DateTime?
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tasks Task[]
+
+  @@index([goalId])
+}
+
+// ==========================================
+// STUDY, SUBJECTS, TOPICS & EXAMS
+// ==========================================
+
+model Subject {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  code      String?
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  topics     Topic[]
+  exams      Exam[]
+  studyPlans StudyPlan[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model Topic {
+  id          String   @id @default(uuid())
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  difficulty  Int      @default(3) // 1-5 scale
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  studyPlans StudyPlan[]
+
+  @@index([subjectId])
 }
 
 model Exam {
-  id         String      @id @default(uuid())
-  userId     String
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subject    String
-  examDate   DateTime
-  topics     String[]
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId   String
+  subject     Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  title       String
+  examDate    DateTime
+  status      ExamStatus @default(UPCOMING)
+  location    String?
+  targetGrade String?
+  notes       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
   studyPlans StudyPlan[]
+  reminders  Reminder[]
+
+  @@index([userId, examDate])
+  @@index([subjectId])
 }
 
 model StudyPlan {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  examId      String?
-  exam        Exam?    @relation(fields: [examId], references: [id], onDelete: SetNull)
-  topic       String
-  scheduledAt DateTime
-  isCompleted Boolean  @default(false)
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId       String
+  subject         Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topicId         String?
+  topic           Topic?    @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  examId          String?
+  exam            Exam?     @relation(fields: [examId], references: [id], onDelete: SetNull)
+  title           String
+  scheduledDate   DateTime
+  durationMinutes Int       @default(60)
+  isCompleted     Boolean   @default(false)
+  completedAt     DateTime?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId, scheduledDate])
+  @@index([subjectId])
+  @@index([topicId])
+  @@index([examId])
 }
 
-model DietLog {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mealType     String
-  foodName     String
-  calories     Int
-  proteinGrams Float?
-  loggedAt     DateTime @default(now())
+// ==========================================
+// MEALS, DIET & GROCERY
+// ==========================================
+
+model MealPlan {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title              String
+  startDate          DateTime
+  endDate            DateTime
+  dailyCalorieTarget Int?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  meals Meal[]
+
+  @@index([userId, startDate, endDate])
 }
+
+model Meal {
+  id           String    @id @default(uuid())
+  mealPlanId   String
+  mealPlan     MealPlan  @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  date         DateTime
+  mealType     MealType  @default(LUNCH)
+  recipeName   String
+  calories     Int?
+  proteinGrams Float?
+  carbsGrams   Float?
+  fatsGrams    Float?
+  notes        String?
+  isCompleted  Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  groceries GroceryItem[]
+
+  @@index([mealPlanId, date])
+}
+
+model GroceryItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealId    String?
+  meal      Meal?    @relation(fields: [mealId], references: [id], onDelete: SetNull)
+  name      String
+  quantity  Float    @default(1.0)
+  unit      String?  // e.g. "kg", "g", "pcs", "pack"
+  category  String?  // e.g. "Produce", "Dairy", "Pantry"
+  isBought  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, isBought])
+  @@index([mealId])
+}
+
+// ==========================================
+// WATER & FOCUS SESSIONS
+// ==========================================
 
 model WaterLog {
-  id       String   @id @default(uuid())
-  userId   String
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amountMl Int
-  loggedAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amountMl  Int      // e.g. 250, 500
+  loggedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([userId, loggedAt])
 }
 
 model FocusSession {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  durationMin  Int
-  distractions Int      @default(0)
-  completedAt  DateTime @default(now())
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId          String?
+  task            Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  focusType       FocusType @default(POMODORO)
+  durationMinutes Int       @default(25)
+  distractions    Int       @default(0)
+  notes           String?
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+
+  @@index([userId, startedAt])
+  @@index([taskId])
 }
+
+// ==========================================
+// NOTES & NOTIFICATIONS
+// ==========================================
 
 model Note {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String
-  content   String
-  tags      String[]
-  isAudio   Boolean  @default(false)
-  audioUrl  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  title      String
+  content    String
+  tags       String[]  @default([])
+  isAudio    Boolean   @default(false)
+  audioUrl   String?
+  isPinned   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-model AiConversation {
-  id        String      @id @default(uuid())
-  userId    String
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String      @default("New Conversation")
-  createdAt DateTime    @default(now())
-  messages  AiMessage[]
-}
-
-model AiMessage {
-  id             String         @id @default(uuid())
-  conversationId String
-  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         String
-  content        String
-  createdAt      DateTime       @default(now())
+  @@index([userId, isPinned])
+  @@index([categoryId])
 }
 
 model Notification {
-  id        String   @id @default(uuid())
+  id        String           @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType @default(REMINDER)
   title     String
   message   String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  data      Json?
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}
+
+// ==========================================
+// AI CONVERSATIONS & CHAT MESSAGES
+// ==========================================
+
+model AIConversation {
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String        @default("New Conversation")
+  systemPrompt String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  messages ChatMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model ChatMessage {
+  id             String         @id @default(uuid())
+  conversationId String
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole    @default(USER)
+  content        String
+  tokens         Int?
+  metadata       Json?
+  createdAt      DateTime       @default(now())
+
+  @@index([conversationId, createdAt])
 }
