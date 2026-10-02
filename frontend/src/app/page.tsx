@@ -9,9 +9,26 @@ export default function Home() {
           LifePilot AI
         </h1>
         <p className="text-xl text-slate-400 font-light max-w-xl mx-auto">
-          "Plan your day. Stay on track. Live better."
+          &ldquo;Plan your day. Stay on track. Live better.&rdquo;
         </p>
-        <div className="pt-4 flex flex-wrap gap-4 justify-center">
+        <div className="pt-2 flex flex-wrap gap-4 justify-center">
+          <a
+            href="/login"
+            id="home-signin-button"
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-lg shadow-blue-600/30 transition-all cursor-pointer"
+          >
+            Sign In to LifePilot
+          </a>
+          <a
+            href="/register"
+            id="home-register-button"
+            className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-sm transition-all cursor-pointer"
+          >
+            Create New Account
+          </a>
+        </div>
+
+        <div className="pt-6 flex flex-wrap gap-4 justify-center">
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-left w-64">
             <h3 className="font-semibold text-blue-400">Frontend Service</h3>
             <p className="text-xs text-slate-400 mt-1">Next.js 14 App Router + Tailwind</p>
