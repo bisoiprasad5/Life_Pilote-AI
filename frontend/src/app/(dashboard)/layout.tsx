@@ -1,33 +1,48 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
+import { useTheme } from '@/lib/theme-context';
 import {
   Sparkles,
   LayoutDashboard,
   CheckSquare,
   Calendar,
+  Bot,
   BookOpen,
+  Utensils,
   Flame,
   Target,
-  Clock,
-  User,
+  BarChart3,
+  StickyNote,
+  Settings,
   LogOut,
-  ShieldCheck,
+  Sun,
+  Moon,
+  Menu,
+  X,
+  Search,
+  Bell,
+  Clock,
+  Zap,
   Loader2,
+  ShieldCheck,
 } from 'lucide-react';
 
-const NAV_ITEMS = [
-  { name: 'Overview', href: '/overview', icon: LayoutDashboard },
-  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
-  { name: 'Schedule', href: '/schedule', icon: Calendar },
-  { name: 'Study & Exams', href: '/study', icon: BookOpen },
+const SIDEBAR_NAV = [
+  { name: 'Dashboard', href: '/overview', icon: LayoutDashboard },
+  { name: 'Tasks', href: '/tasks', icon: CheckSquare, badge: 'Smart' },
+  { name: 'Calendar', href: '/calendar', icon: Calendar },
+  { name: 'AI Assistant', href: '/ai-assistant', icon: Bot, highlight: true },
+  { name: 'Study', href: '/study', icon: BookOpen },
+  { name: 'Diet', href: '/diet', icon: Utensils },
   { name: 'Habits', href: '/habits', icon: Flame },
   { name: 'Goals', href: '/goals', icon: Target },
-  { name: 'Focus Timer', href: '/focus', icon: Clock },
-  { name: 'User Profile', href: '/profile', icon: User },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Notes', href: '/notes', icon: StickyNote },
+  { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
 export default function ProtectedDashboardLayout({
@@ -43,11 +58,34 @@ export default function ProtectedDashboardLayout({
   const isInitialized = useAuthStore((s) => s.isInitialized);
   const logout = useAuthStore((s) => s.logout);
 
+  const { theme, toggleTheme } = useTheme();
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState<string>('');
+
   useEffect(() => {
     if (isInitialized && !isAuthenticated) {
       router.replace('/login');
     }
   }, [isInitialized, isAuthenticated, router]);
+
+  // Live real-time clock updating every second
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(
+        now.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+        }),
+      );
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -71,7 +109,7 @@ export default function ProtectedDashboardLayout({
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect via useEffect
+    return null;
   }
 
   const initials = user?.fullName
@@ -84,42 +122,66 @@ export default function ProtectedDashboardLayout({
     : 'LP';
 
   return (
-    <div className="min-h-screen flex bg-slate-950 text-slate-100">
-      {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-slate-800/80 bg-slate-900/60 backdrop-blur-xl flex flex-col fixed inset-y-0 z-30">
+    <div className="min-h-screen flex bg-slate-950 text-slate-100 selection:bg-blue-600 selection:text-white">
+      {/* ------------------------------------------------------------- */}
+      {/* 1. DESKTOP & TABLET SIDEBAR                                    */}
+      {/* ------------------------------------------------------------- */}
+      <aside className="hidden lg:flex w-64 border-r border-slate-800/80 bg-slate-900/60 backdrop-blur-xl flex-col fixed inset-y-0 z-30">
         {/* Brand */}
-        <div className="p-5 border-b border-slate-800/80 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="font-bold text-base bg-gradient-to-r from-blue-400 via-indigo-300 to-white bg-clip-text text-transparent">
-              LifePilot AI
-            </h2>
-            <p className="text-[10px] text-slate-400 font-medium tracking-wide">
-              PERSONAL LIFE OS
-            </p>
-          </div>
+        <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
+          <Link href="/overview" className="flex items-center gap-3 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-bold text-base bg-gradient-to-r from-blue-400 via-indigo-300 to-white bg-clip-text text-transparent">
+                LifePilot AI
+              </h2>
+              <p className="text-[10px] text-slate-400 font-medium tracking-wider">
+                PRODUCTIVITY OS
+              </p>
+            </div>
+          </Link>
         </div>
 
         {/* Navigation list */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
+          {SIDEBAR_NAV.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || (item.href === '/overview' && pathname === '/');
             return (
               <Link
-                key={item.href}
+                key={item.name}
                 href={item.href}
                 id={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                <span>{item.name}</span>
+                <div className="flex items-center gap-3">
+                  <Icon
+                    className={`w-4 h-4 ${
+                      isActive ? 'text-white' : item.highlight ? 'text-indigo-400' : 'text-slate-400'
+                    }`}
+                  />
+                  <span>{item.name}</span>
+                </div>
+                {item.badge && (
+                  <span
+                    className={`px-1.5 py-0.5 rounded-md text-[9px] font-mono font-bold ${
+                      isActive
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+                {item.highlight && !isActive && (
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+                )}
               </Link>
             );
           })}
@@ -127,23 +189,23 @@ export default function ProtectedDashboardLayout({
 
         {/* User Session Footer */}
         <div className="p-3 border-t border-slate-800/80 bg-slate-950/40">
-          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900/80 border border-slate-800">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xs font-bold flex-shrink-0">
+          <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-sm">
+            <Link href="/profile" className="flex items-center gap-2.5 min-w-0 group">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm">
                 {initials}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-slate-200 truncate">
-                  {user?.fullName || 'User'}
+                <p className="text-xs font-semibold text-slate-200 group-hover:text-blue-400 transition-colors truncate">
+                  {user?.fullName || 'Pilot'}
                 </p>
                 <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
               </div>
-            </div>
+            </Link>
             <button
-              id="logout-button"
+              id="sidebar-logout-button"
               onClick={handleLogout}
-              title="Logout"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+              title="Sign Out"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -151,34 +213,173 @@ export default function ProtectedDashboardLayout({
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="pl-64 flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
-        <header className="h-16 border-b border-slate-800/80 bg-slate-900/40 backdrop-blur-xl px-6 flex items-center justify-between sticky top-0 z-20">
+      {/* ------------------------------------------------------------- */}
+      {/* 2. MOBILE SLIDE-OUT DRAWER                                     */}
+      {/* ------------------------------------------------------------- */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 w-72 bg-slate-900 border-r border-slate-800 p-4 flex flex-col z-10 animate-in slide-in-from-left duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-sm text-white">LifePilot AI</h3>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Links */}
+            <nav className="flex-1 py-4 space-y-1 overflow-y-auto">
+              {SIDEBAR_NAV.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Logout */}
+            <div className="pt-3 border-t border-slate-800">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* 3. MAIN CONTENT CONTAINER                                      */}
+      {/* ------------------------------------------------------------- */}
+      <div className="lg:pl-64 flex-1 flex flex-col min-w-0">
+        {/* Top Header Navigation */}
+        <header className="h-16 border-b border-slate-800/80 bg-slate-900/40 backdrop-blur-xl px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20">
+          {/* Mobile hamburger + Breadcrumb */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Session Authenticated</span>
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            {/* Search Input bar */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/50 border border-slate-700/60 text-slate-400 text-xs w-64 focus-within:w-80 focus-within:border-blue-500 focus-within:text-slate-200 transition-all">
+              <Search className="w-3.5 h-3.5 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search tasks, study, notes... (⌘K)"
+                className="bg-transparent border-none outline-none w-full text-slate-200 placeholder-slate-500 text-xs"
+              />
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-slate-400">
-              Role: <span className="font-mono text-blue-400 uppercase">{user?.role || 'USER'}</span>
-            </span>
+          {/* Right Controls */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* Live Clock Indicator */}
+            {currentTime && (
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800/60 border border-slate-700/60 text-slate-300 font-mono text-xs">
+                <Clock className="w-3.5 h-3.5 text-blue-400" />
+                <span>{currentTime}</span>
+              </div>
+            )}
+
+            {/* Dark / Light Mode Toggle */}
             <button
-              id="header-logout-button"
-              onClick={handleLogout}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
+              onClick={toggleTheme}
+              id="theme-toggle-button"
+              title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+              className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-amber-400 transition-colors cursor-pointer"
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-indigo-400" />
+              )}
             </button>
+
+            {/* Notifications Bell */}
+            <button
+              id="notifications-button"
+              className="relative p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white transition-colors cursor-pointer"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+            </button>
+
+            {/* User Profile Pill */}
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 p-1.5 pr-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-xs text-slate-200 transition-colors"
+            >
+              <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white">
+                {initials}
+              </div>
+              <span className="hidden sm:inline font-semibold">{user?.fullName?.split(' ')[0] || 'Pilot'}</span>
+            </Link>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
+        {/* Page Content Viewport */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto pb-20 lg:pb-8">
+          {children}
+        </main>
+
+        {/* ------------------------------------------------------------- */}
+        {/* 4. MOBILE BOTTOM NAVIGATION                                    */}
+        {/* ------------------------------------------------------------- */}
+        <div className="lg:hidden fixed bottom-0 inset-x-0 h-14 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 z-30 px-4 flex items-center justify-around">
+          {[
+            { name: 'Dashboard', href: '/overview', icon: LayoutDashboard },
+            { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+            { name: 'Calendar', href: '/calendar', icon: Calendar },
+            { name: 'AI', href: '/ai-assistant', icon: Bot },
+            { name: 'Habits', href: '/habits', icon: Flame },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = pathname === tab.href;
+            return (
+              <Link
+                key={tab.name}
+                href={tab.href}
+                className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-lg text-[10px] font-medium transition-colors ${
+                  isActive ? 'text-blue-400' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{tab.name}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
