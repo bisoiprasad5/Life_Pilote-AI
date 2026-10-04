@@ -14,7 +14,9 @@
     "start:prod": "node dist/main",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "test:auth": "ts-node test/auth.test.ts"
+    "test:auth": "ts-node test/auth.test.ts",
+    "test:tasks": "ts-node test/tasks.test.ts",
+    "test:task": "ts-node test/tasks.test.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",

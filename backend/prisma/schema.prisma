@@ -21,6 +21,17 @@ enum Priority {
   MEDIUM
   HIGH
   URGENT
+  CRITICAL
+}
+
+enum TaskCategory {
+  STUDY
+  WORK
+  PERSONAL
+  HEALTH
+  FITNESS
+  FINANCE
+  OTHER
 }
 
 enum TaskStatus {
@@ -202,12 +213,18 @@ model Task {
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   categoryId         String?
   category           Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  taskCategory       TaskCategory        @default(OTHER)
   title              String
   description        String?
+  notes              String?
   priority           Priority            @default(MEDIUM)
   status             TaskStatus          @default(TODO)
   estimatedMinutes   Int?
   actualMinutes      Int?
+  date               DateTime?
+  startTime          String?             // e.g. "09:00"
+  endTime            String?             // e.g. "10:30"
+  deadline           DateTime?
   dueDate            DateTime?
   dueTime            String?             // e.g. "14:30"
   isAllDay           Boolean             @default(false)
@@ -216,6 +233,7 @@ model Task {
   isRecurring        Boolean             @default(false)
   recurrenceInterval RecurrenceInterval?
   recurrenceRule     String?             // iCal RRULE pattern for complex repeats
+  reminderTime       DateTime?
   parentTaskId       String?
   parentTask         Task?               @relation("TaskRecurringInstances", fields: [parentTaskId], references: [id], onDelete: Cascade)
   calendarEventId    String?
@@ -232,7 +250,9 @@ model Task {
 
   @@index([userId, status])
   @@index([userId, dueDate])
+  @@index([userId, date])
   @@index([userId, priority])
+  @@index([userId, taskCategory])
   @@index([parentTaskId])
 }
 

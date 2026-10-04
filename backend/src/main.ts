@@ -10,6 +10,14 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
+  // URL rewrite middleware: seamlessly support both /api/tasks and /api/v1/tasks
+  app.use((req: any, _res: any, next: any) => {
+    if (req.url.startsWith('/api/') && !req.url.startsWith('/api/v1/')) {
+      req.url = req.url.replace('/api/', '/api/v1/');
+    }
+    next();
+  });
+
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,

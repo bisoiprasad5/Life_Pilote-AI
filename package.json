@@ -1,0 +1,14 @@
+{
+  "name": "lifepilot-root",
+  "private": true,
+  "description": "LifePilot AI Monorepo root scripts",
+  "scripts": {
+    "test:tasks": "npm --prefix backend run test:tasks",
+    "test:task": "npm --prefix backend run test:tasks",
+    "test:auth": "npm --prefix backend run test:auth",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "dev:backend": "npm --prefix backend run start:dev",
+    "dev:frontend": "npm --prefix frontend run dev"
+  }
+}
