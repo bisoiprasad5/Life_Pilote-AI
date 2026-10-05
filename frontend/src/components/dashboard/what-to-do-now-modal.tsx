@@ -73,43 +73,43 @@ export function WhatToDoNowModal({
       {recommendation ? (
         <div className="space-y-5">
           {/* AI Recommendation Header Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-600/15 via-indigo-600/15 to-purple-600/10 border border-blue-500/25">
-            <div className="flex items-center gap-2 text-xs font-semibold text-blue-400 mb-1.5">
-              <Sparkles className="w-4 h-4 text-blue-400" />
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-500/20">
+            <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1.5">
+              <Sparkles className="w-4 h-4 text-blue-500 dark:text-blue-400" />
               <span>Optimal Next Focus Target</span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">{recommendation.reason}</p>
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{recommendation.reason}</p>
           </div>
 
           {/* Highlighted Task Details */}
-          <div className="p-5 rounded-2xl bg-slate-800/70 border border-slate-700/80 space-y-3 shadow-lg">
+          <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/80 space-y-3 shadow-sm dark:shadow-lg">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <CategoryBadge category={recommendation.task.category} />
                 <PriorityBadge priority={recommendation.task.priority} />
               </div>
               {recommendation.task.estimatedDuration && (
-                <span className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
-                  <Clock className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono">
+                  <Clock className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
                   {recommendation.task.estimatedDuration} mins
                 </span>
               )}
             </div>
 
-            <h4 className="text-base font-bold text-white tracking-tight">
+            <h4 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
               {recommendation.task.title}
             </h4>
 
             {recommendation.task.description && (
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 {recommendation.task.description}
               </p>
             )}
 
             {/* Subtasks Preview */}
             {recommendation.task.subtasks && recommendation.task.subtasks.length > 0 && (
-              <div className="pt-2 border-t border-slate-700/60">
-                <p className="text-[11px] font-semibold text-slate-400 mb-1.5">
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-700/60">
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
                   Subtasks ({recommendation.task.subtasks.filter((s) => s.isCompleted).length}/
                   {recommendation.task.subtasks.length}):
                 </p>
@@ -117,18 +117,18 @@ export function WhatToDoNowModal({
                   {recommendation.task.subtasks.slice(0, 3).map((st) => (
                     <div
                       key={st.id}
-                      className="flex items-center gap-2 text-xs text-slate-300 truncate"
+                      className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 truncate"
                     >
                       <div
                         className={`w-3.5 h-3.5 rounded border flex items-center justify-center ${
                           st.isCompleted
-                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                            : 'border-slate-600'
+                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                            : 'border-slate-300 dark:border-slate-600'
                         }`}
                       >
                         {st.isCompleted && <CheckCircle className="w-3 h-3" />}
                       </div>
-                      <span className={st.isCompleted ? 'line-through text-slate-500' : ''}>
+                      <span className={st.isCompleted ? 'line-through text-slate-400 dark:text-slate-500' : ''}>
                         {st.title}
                       </span>
                     </div>
@@ -145,9 +145,9 @@ export function WhatToDoNowModal({
                 onCompleteTask(recommendation.task.id);
                 onClose();
               }}
-              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
             >
-              <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
               <span>Mark Done</span>
             </button>
 
@@ -166,11 +166,11 @@ export function WhatToDoNowModal({
         </div>
       ) : (
         <div className="text-center py-8 space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto">
             <CheckCircle className="w-6 h-6" />
           </div>
-          <h4 className="text-base font-bold text-white">All Caught Up!</h4>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+          <h4 className="text-base font-bold text-slate-900 dark:text-white">All Caught Up!</h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
             You have no pending tasks right now. Take a well-deserved break, review your goals, or add your next milestone.
           </p>
         </div>

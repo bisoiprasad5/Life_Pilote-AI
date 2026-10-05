@@ -19,6 +19,7 @@ import {
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
+  const loginDemo = useAuthStore((s) => s.loginDemo);
   const isLoading = useAuthStore((s) => s.isLoading);
 
   const [email, setEmail] = useState('');
@@ -37,7 +38,7 @@ export default function LoginPage() {
 
     try {
       await login({ email, password });
-      router.push('/overview');
+      router.push('/dashboard');
     } catch (err: unknown) {
       setErrorMessage(
         err instanceof Error ? err.message : 'Login failed. Please verify credentials.',
@@ -158,6 +159,28 @@ export default function LoginPage() {
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
+            </button>
+
+            <div className="relative my-3">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-800" />
+              </div>
+              <div className="relative flex justify-center text-[10px] uppercase font-semibold">
+                <span className="bg-slate-900 px-2 text-slate-400">Or Preview</span>
+              </div>
+            </div>
+
+            <button
+              id="login-demo-button"
+              type="button"
+              onClick={() => {
+                loginDemo();
+                router.push('/dashboard');
+              }}
+              className="w-full py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:border-slate-600"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Explore Demo Workspace</span>
             </button>
           </form>
 

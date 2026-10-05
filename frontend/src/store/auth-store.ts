@@ -33,6 +33,7 @@ interface AuthState {
   error: string | null;
 
   login: (data: { email: string; password: string }) => Promise<void>;
+  loginDemo: () => void;
   register: (data: { email: string; password: string; fullName: string }) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
@@ -59,23 +60,70 @@ export const useAuthStore = create<AuthState>((set) => ({
           isAuthenticated: true,
           isLoading: false,
           isInitialized: true,
+          error: null,
         });
-      } else {
-        set({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-          isInitialized: true,
-        });
+        return;
       }
     } catch {
-      set({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        isInitialized: true,
-      });
+      // Backend returned 401 or token invalid
     }
+
+    if (typeof window !== 'undefined') {
+      const demoSaved = localStorage.getItem('lifepilot_demo_session');
+      const token = localStorage.getItem('lifepilot_token');
+      // Only keep demo session if there is no real token flow
+      if (demoSaved && !token) {
+        try {
+          const user = JSON.parse(demoSaved);
+          set({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+            isInitialized: true,
+          });
+          return;
+        } catch {}
+      }
+    }
+
+    set({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      isInitialized: true,
+    });
+  },
+
+  loginDemo: () => {
+    const demoUser: User = {
+      id: 'demo-pilot-001',
+      email: 'pilot@lifepilot.ai',
+      fullName: 'Alex Vance',
+      role: 'USER',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      preference: {
+        theme: 'dark',
+        timezone: 'UTC',
+        energyLevel: 4,
+        morningBriefingEnabled: true,
+        morningBriefingTime: '07:30',
+        nightReviewEnabled: true,
+        nightReviewTime: '21:30',
+        dailyWaterTargetMl: 2500,
+        defaultPomodoroLength: 25,
+      },
+    };
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lifepilot_demo_session', JSON.stringify(demoUser));
+    }
+    set({
+      user: demoUser,
+      isAuthenticated: true,
+      isLoading: false,
+      isInitialized: true,
+      error: null,
+    });
   },
 
   login: async (credentials) => {
@@ -83,6 +131,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await api.post('/auth/login', credentials);
       if (response.data?.success && response.data?.user) {
+        if (response.data.token && typeof window !== 'undefined') {
+          localStorage.setItem('lifepilot_token', response.data.token);
+          localStorage.removeItem('lifepilot_demo_session');
+        }
         set({
           user: response.data.user,
           isAuthenticated: true,
@@ -105,6 +157,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await api.post('/auth/register', data);
       if (response.data?.success && response.data?.user) {
+        if (response.data.token && typeof window !== 'undefined') {
+          localStorage.setItem('lifepilot_token', response.data.token);
+          localStorage.removeItem('lifepilot_demo_session');
+        }
         set({
           user: response.data.user,
           isAuthenticated: true,
@@ -129,6 +185,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       // Ignore network errors on logout
     } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('lifepilot_token');
+        localStorage.removeItem('lifepilot_demo_session');
+      }
       set({
         user: null,
         isAuthenticated: false,

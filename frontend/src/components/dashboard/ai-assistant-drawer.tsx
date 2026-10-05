@@ -97,36 +97,36 @@ export function AiAssistantDrawer({
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col text-slate-100 z-10 animate-in slide-in-from-right duration-300">
+        <div className="w-screen max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col text-slate-900 dark:text-slate-100 z-10 animate-in slide-in-from-right duration-300">
           {/* Header */}
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-950/40">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   LifePilot AI Assistant
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 </h3>
-                <p className="text-[10px] text-slate-400">Contextual Schedule & Life Copilot</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">Contextual Schedule & Life Copilot</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Quick Prompts Bar */}
-          <div className="p-3 border-b border-slate-800/80 bg-slate-900/60 overflow-x-auto flex gap-2 no-scrollbar">
+          <div className="p-3 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/60 overflow-x-auto flex gap-2 no-scrollbar">
             {quickPrompts.map((qp, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSend(qp)}
-                className="whitespace-nowrap px-3 py-1.5 rounded-full bg-slate-800/80 hover:bg-blue-600/20 hover:border-blue-500/30 border border-slate-700/80 text-[11px] text-slate-300 hover:text-blue-300 transition-all cursor-pointer flex-shrink-0"
+                className="whitespace-nowrap px-3 py-1.5 rounded-full bg-white dark:bg-slate-800/80 hover:bg-blue-50 dark:hover:bg-blue-600/20 border border-slate-200 dark:border-slate-700/80 text-[11px] text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-300 transition-all cursor-pointer flex-shrink-0 shadow-xs"
               >
                 {qp}
               </button>
@@ -143,7 +143,7 @@ export function AiAssistantDrawer({
                 }`}
               >
                 {m.role === 'assistant' && (
-                  <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 flex-shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 dark:bg-blue-600/20 border border-blue-500/20 dark:border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5">
                     <Bot className="w-4 h-4" />
                   </div>
                 )}
@@ -151,14 +151,14 @@ export function AiAssistantDrawer({
                   className={`max-w-[82%] p-3.5 rounded-2xl ${
                     m.role === 'user'
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-                      : 'bg-slate-800/80 border border-slate-700/70 text-slate-200'
+                      : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/70 text-slate-800 dark:text-slate-200 shadow-xs'
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{m.text}</p>
                   <span className="block mt-1 text-[9px] opacity-60 text-right">{m.time}</span>
                 </div>
                 {m.role === 'user' && (
-                  <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 flex-shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 flex-shrink-0 mt-0.5">
                     <User className="w-4 h-4" />
                   </div>
                 )}
@@ -166,15 +166,15 @@ export function AiAssistantDrawer({
             ))}
 
             {isTyping && (
-              <div className="flex items-center gap-2 text-xs text-slate-400 p-2">
-                <Bot className="w-4 h-4 text-blue-400" />
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 p-2">
+                <Bot className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                 <span className="animate-pulse">Thinking & evaluating schedule...</span>
               </div>
             )}
           </div>
 
           {/* Input Bar */}
-          <div className="p-3 border-t border-slate-800 bg-slate-950/60">
+          <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -187,7 +187,7 @@ export function AiAssistantDrawer({
                 placeholder="Ask LifePilot anything or request scheduling advice..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="submit"

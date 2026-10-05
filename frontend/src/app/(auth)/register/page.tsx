@@ -62,7 +62,7 @@ export default function RegisterPage() {
         email: email.trim(),
         password,
       });
-      router.push('/overview');
+      router.push('/dashboard');
     } catch (err: unknown) {
       setErrorMessage(
         err instanceof Error ? err.message : 'Registration failed. Please try again.',

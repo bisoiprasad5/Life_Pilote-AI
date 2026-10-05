@@ -87,49 +87,49 @@ export function QuickAddTaskModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         {error && (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400">
             {error}
           </div>
         )}
 
         {/* Title */}
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">
-            Task Title <span className="text-rose-400">*</span>
+          <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+            Task Title <span className="text-rose-500">*</span>
           </label>
           <input
             type="text"
             placeholder="e.g., Prepare quarterly roadmap review"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             autoFocus
           />
         </div>
 
         {/* Description */}
         <div>
-          <label className="block text-slate-300 font-semibold mb-1">Description (Optional)</label>
+          <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Description (Optional)</label>
           <textarea
             placeholder="Key objectives, links, or notes..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
-            className="w-full px-3.5 py-2 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         {/* Priority & Category Grid */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
-              <Flag className="w-3.5 h-3.5 text-blue-400" />
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
+              <Flag className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
               Priority
             </label>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as CreateTaskPayload['priority'])}
-              className="w-full px-3 py-2 rounded-xl bg-slate-800/80 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -139,14 +139,14 @@ export function QuickAddTaskModal({
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-purple-400" />
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1 flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400" />
               Category
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as CreateTaskPayload['category'])}
-              className="w-full px-3 py-2 rounded-xl bg-slate-800/80 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="WORK">Work</option>
               <option value="STUDY">Study</option>
@@ -162,34 +162,34 @@ export function QuickAddTaskModal({
         {/* Date & Times */}
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1 flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
               Date
             </label>
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full px-2.5 py-2 rounded-xl bg-slate-800/80 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-blue-400" />
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1 flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
               Start Time
             </label>
             <input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full px-2.5 py-2 rounded-xl bg-slate-800/80 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-blue-400" />
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1 flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
               Duration (m)
             </label>
             <input
@@ -198,14 +198,14 @@ export function QuickAddTaskModal({
               step="5"
               value={estimatedDuration}
               onChange={(e) => setEstimatedDuration(parseInt(e.target.value, 10))}
-              className="w-full px-2.5 py-2 rounded-xl bg-slate-800/80 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
 
         {/* Subtasks */}
         <div className="pt-1">
-          <label className="block text-slate-300 font-semibold mb-1.5">Subtasks</label>
+          <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">Subtasks</label>
           <div className="flex gap-2 mb-2">
             <input
               type="text"
@@ -218,12 +218,12 @@ export function QuickAddTaskModal({
                   handleAddSubtask();
                 }
               }}
-              className="flex-1 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               type="button"
               onClick={handleAddSubtask}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition-colors"
             >
               Add
             </button>
@@ -234,13 +234,13 @@ export function QuickAddTaskModal({
               {subtasks.map((st, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/60 text-slate-300"
+                  className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-slate-800 dark:text-slate-300"
                 >
                   <span className="truncate">{st}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveSubtask(i)}
-                    className="text-slate-400 hover:text-rose-400"
+                    className="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -251,11 +251,11 @@ export function QuickAddTaskModal({
         </div>
 
         {/* Actions */}
-        <div className="pt-3 border-t border-slate-800/80 flex items-center justify-end gap-2.5">
+        <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="px-4 py-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             Cancel
           </button>
