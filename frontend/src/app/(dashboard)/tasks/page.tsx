@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { PriorityBadge, CategoryBadge } from '@/components/ui/badge';
 import { QuickAddTaskModal } from '@/components/dashboard/quick-add-task-modal';
 import { EditTaskModal } from '@/components/dashboard/edit-task-modal';
+import { AiTaskParserBar } from '@/components/dashboard/ai-task-parser-bar';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import {
@@ -153,6 +154,9 @@ export default function TasksPage() {
           <span>New Task</span>
         </button>
       </div>
+
+      {/* AI Task Parser Bar */}
+      <AiTaskParserBar onTaskCreated={loadTasks} />
 
       {/* Filter and Search Bar */}
       <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-xs dark:shadow-md space-y-3">

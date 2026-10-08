@@ -7,6 +7,8 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { TasksModule } from './tasks/tasks.module';
 import { CalendarModule } from './calendar/calendar.module';
+import { AiModule } from './ai/ai.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { CalendarModule } from './calendar/calendar.module';
     AuthModule,
     TasksModule,
     CalendarModule,
+    AiModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

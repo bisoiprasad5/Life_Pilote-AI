@@ -144,6 +144,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   preference     UserPreference?
+  notificationPreference NotificationPreference?
   categories     Category[]
   tasks          Task[]
   calendarEvents CalendarEvent[]
@@ -180,6 +181,42 @@ model UserPreference {
   quietHoursEnd          String?
   dailyWaterTargetMl     Int      @default(2500)
   defaultPomodoroLength  Int      @default(25)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model NotificationPreference {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Channels
+  browserEnabled         Boolean  @default(true)
+  inAppEnabled           Boolean  @default(true)
+  emailEnabled           Boolean  @default(false)
+
+  // Notification categories (enable/disable)
+  upcomingTask           Boolean  @default(true)
+  taskStarting           Boolean  @default(true)
+  overdueTask            Boolean  @default(true)
+  deadlineApproaching    Boolean  @default(true)
+  habitReminder          Boolean  @default(true)
+  waterReminder          Boolean  @default(true)
+  mealReminder           Boolean  @default(true)
+  studyReminder          Boolean  @default(true)
+  examReminder           Boolean  @default(true)
+  goalReminder           Boolean  @default(true)
+
+  // Default timing offset: 5_MINUTES, 10_MINUTES, 15_MINUTES, 30_MINUTES, 1_HOUR, 1_DAY
+  defaultTiming          String   @default("15_MINUTES")
+
+  // Quiet hours
+  quietHoursEnabled      Boolean  @default(false)
+  quietHoursStart        String?  @default("22:00")
+  quietHoursEnd          String?  @default("07:00")
+
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

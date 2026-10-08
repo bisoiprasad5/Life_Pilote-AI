@@ -3,8 +3,11 @@ import {
   Logger,
   NotFoundException,
   ForbiddenException,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationCategory, NotificationTiming } from '../notifications/notifications.constants';
 import { CreateTaskDto, PriorityLevel, TaskCategoryType, TaskStatusType } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { QueryTasksDto, SortByOption, SortOrderOption } from './dto/query-tasks.dto';
@@ -31,7 +34,10 @@ export class TasksService {
   // In-memory fallback stores for offline/local development resilience
   private memoryTasks = new Map<string, TaskEntity>();
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly notificationsService?: NotificationsService,
+  ) {}
 
   // Helper: Normalize any task object into consistent TaskEntity format
   private formatTask(raw: any): TaskEntity {
@@ -198,7 +204,9 @@ export class TasksService {
             category: true,
           },
         });
-        return this.formatTask(created);
+        const formatted = this.formatTask(created);
+        this.scheduleTaskReminders(userId, formatted);
+        return formatted;
       } catch (err: any) {
         this.logger.warn(`Prisma task create failed, falling back to memory: ${err.message}`);
       }
@@ -254,7 +262,51 @@ export class TasksService {
     };
 
     this.memoryTasks.set(id, task);
+    this.scheduleTaskReminders(userId, task);
     return task;
+  }
+
+  private scheduleTaskReminders(userId: string, task: TaskEntity) {
+    if (!this.notificationsService) return;
+    try {
+      if (task.reminderTime) {
+        this.notificationsService.scheduleReminder(userId, {
+          title: `Upcoming Task: ${task.title}`,
+          category: NotificationCategory.UPCOMING_TASK,
+          targetTime: task.reminderTime,
+          triggerTime: task.reminderTime,
+          taskId: task.id,
+          description: task.description || undefined,
+        }).catch(() => {});
+      }
+
+      if (task.deadline) {
+        this.notificationsService.scheduleReminder(userId, {
+          title: `Deadline Approaching: ${task.title}`,
+          category: NotificationCategory.DEADLINE_APPROACHING,
+          targetTime: task.deadline,
+          timing: NotificationTiming.ONE_HOUR,
+          taskId: task.id,
+          description: `Task "${task.title}" is due soon.`,
+        }).catch(() => {});
+      }
+
+      if (task.startTime && task.date) {
+        const [h, m] = task.startTime.split(':').map(Number);
+        const startTarget = new Date(task.date);
+        startTarget.setHours(h, m, 0, 0);
+        this.notificationsService.scheduleReminder(userId, {
+          title: `Task Starting: ${task.title}`,
+          category: NotificationCategory.TASK_STARTING,
+          targetTime: startTarget.toISOString(),
+          timing: NotificationTiming.FIVE_MINUTES,
+          taskId: task.id,
+          description: `Scheduled to begin at ${task.startTime}`,
+        }).catch(() => {});
+      }
+    } catch {
+      // Ignore background scheduling exceptions
+    }
   }
 
   // 2. READ TASKS (LIST WITH FILTERING, SORTING, SEARCH, PAGINATION)

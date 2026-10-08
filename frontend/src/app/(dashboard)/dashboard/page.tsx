@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { QuickAddTaskModal } from '@/components/dashboard/quick-add-task-modal';
 import { WhatToDoNowModal } from '@/components/dashboard/what-to-do-now-modal';
+import { AiDailyPlannerModal } from '@/components/dashboard/ai-daily-planner-modal';
 import { AiAssistantDrawer } from '@/components/dashboard/ai-assistant-drawer';
 import { WaterTrackerCard } from '@/components/dashboard/water-tracker-card';
 import { FocusTimerCard } from '@/components/dashboard/focus-timer-card';
@@ -51,6 +52,7 @@ export default function DashboardPage() {
   // Modals
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [whatToDoOpen, setWhatToDoOpen] = useState(false);
+  const [aiDailyPlannerOpen, setAiDailyPlannerOpen] = useState(false);
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
 
   // Time & Greeting
@@ -232,14 +234,25 @@ export default function DashboardPage() {
 
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* "What should I do now?" Button */}
+            {/* Prominent "AI Daily Planner" Button */}
+            <button
+              id="ai-daily-planner-button"
+              onClick={() => setAiDailyPlannerOpen(true)}
+              className="relative group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs sm:text-sm font-extrabold shadow-lg shadow-blue-600/30 transition-all cursor-pointer hover:scale-[1.03] active:scale-95 ring-2 ring-blue-400/30 hover:ring-blue-300/60"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+              <span>AI Daily Planner</span>
+              <Clock className="w-3.5 h-3.5 text-blue-200" />
+            </button>
+
+            {/* Prominent "What should I do now?" Button */}
             <button
               id="what-to-do-now-button"
               onClick={() => setWhatToDoOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
+              className="relative group inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-indigo-600/25 transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
             >
-              <Compass className="w-4 h-4 text-amber-300 animate-spin-slow" />
-              <span>What Should I Do Now?</span>
+              <Compass className="w-4 h-4 text-amber-300" />
+              <span>What should I do now?</span>
             </button>
 
             {/* Quick Add Task */}
@@ -697,10 +710,18 @@ export default function DashboardPage() {
         onClose={() => setWhatToDoOpen(false)}
         tasks={tasks}
         energyLevel={user?.preference?.energyLevel || 3}
-        onStartFocus={() => {
+        onStartFocus={(task, duration) => {
           // Focus session triggered
         }}
         onCompleteTask={(id) => handleToggleComplete(id, false)}
+        onTaskUpdated={loadTasks}
+      />
+
+      <AiDailyPlannerModal
+        isOpen={aiDailyPlannerOpen}
+        onClose={() => setAiDailyPlannerOpen(false)}
+        tasks={tasks}
+        onPlanApplied={loadTasks}
       />
 
       <AiAssistantDrawer

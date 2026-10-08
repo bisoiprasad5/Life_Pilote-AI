@@ -1,0 +1,39 @@
+export enum NotificationCategory {
+  UPCOMING_TASK = 'UPCOMING_TASK',
+  TASK_STARTING = 'TASK_STARTING',
+  OVERDUE_TASK = 'OVERDUE_TASK',
+  DEADLINE_APPROACHING = 'DEADLINE_APPROACHING',
+  HABIT_REMINDER = 'HABIT_REMINDER',
+  WATER_REMINDER = 'WATER_REMINDER',
+  MEAL_REMINDER = 'MEAL_REMINDER',
+  STUDY_REMINDER = 'STUDY_REMINDER',
+  EXAM_REMINDER = 'EXAM_REMINDER',
+  GOAL_REMINDER = 'GOAL_REMINDER',
+}
+
+export enum NotificationTiming {
+  FIVE_MINUTES = '5_MINUTES',
+  TEN_MINUTES = '10_MINUTES',
+  FIFTEEN_MINUTES = '15_MINUTES',
+  THIRTY_MINUTES = '30_MINUTES',
+  ONE_HOUR = '1_HOUR',
+  ONE_DAY = '1_DAY',
+}
+
+export const TIMING_OFFSETS_MS: Record<NotificationTiming, number> = {
+  [NotificationTiming.FIVE_MINUTES]: 5 * 60 * 1000,
+  [NotificationTiming.TEN_MINUTES]: 10 * 60 * 1000,
+  [NotificationTiming.FIFTEEN_MINUTES]: 15 * 60 * 1000,
+  [NotificationTiming.THIRTY_MINUTES]: 30 * 60 * 1000,
+  [NotificationTiming.ONE_HOUR]: 60 * 60 * 1000,
+  [NotificationTiming.ONE_DAY]: 24 * 60 * 60 * 1000,
+};
+
+export const NOTIFICATION_QUEUE_NAME = 'smart-notifications';
+
+export enum NotificationJobType {
+  PROCESS_REMINDER = 'PROCESS_REMINDER',
+  RECURRING_REMINDER = 'RECURRING_REMINDER',
+  OVERDUE_CHECK = 'OVERDUE_CHECK',
+  TEST_RETRY_JOB = 'TEST_RETRY_JOB',
+}

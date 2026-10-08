@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
 import { useTheme } from '@/lib/theme-context';
+import { NotificationCenter } from '@/components/notifications/notification-center';
 import {
   Sparkles,
   LayoutDashboard,
@@ -334,14 +335,8 @@ export default function ProtectedDashboardLayout({
               )}
             </button>
 
-            {/* Notifications Bell */}
-            <button
-              id="notifications-button"
-              className="relative p-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-            </button>
+            {/* Smart Notifications Bell & Flyout */}
+            <NotificationCenter />
 
             {/* User Profile Pill */}
             <Link

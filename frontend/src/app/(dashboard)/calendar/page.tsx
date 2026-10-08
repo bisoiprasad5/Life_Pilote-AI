@@ -13,6 +13,7 @@ import { CreateEventModal } from '@/components/calendar/create-event-modal';
 import { EventDetailModal } from '@/components/calendar/event-detail-modal';
 import { DeadlineWarningModal } from '@/components/calendar/deadline-warning-modal';
 import { EditTaskModal } from '@/components/dashboard/edit-task-modal';
+import { AiDailyPlannerModal } from '@/components/dashboard/ai-daily-planner-modal';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import {
@@ -55,6 +56,7 @@ export default function CalendarPage() {
 
   // Modals
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [aiDailyPlannerOpen, setAiDailyPlannerOpen] = useState(false);
   const [createInitialDate, setCreateInitialDate] = useState<string | undefined>();
   const [createInitialStartTime, setCreateInitialStartTime] = useState<string | undefined>();
 
@@ -413,6 +415,16 @@ export default function CalendarPage() {
               </button>
             ))}
           </div>
+
+          {/* AI Daily Planner Button */}
+          <button
+            id="calendar-ai-daily-planner-button"
+            onClick={() => setAiDailyPlannerOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-xs font-bold shadow-md shadow-indigo-600/25 transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+            <span>AI Daily Planner</span>
+          </button>
 
           {/* New Event Button */}
           <button
@@ -991,6 +1003,12 @@ export default function CalendarPage() {
         }}
         onTaskUpdated={loadSchedule}
         onTaskDeleted={loadSchedule}
+      />
+
+      <AiDailyPlannerModal
+        isOpen={aiDailyPlannerOpen}
+        onClose={() => setAiDailyPlannerOpen(false)}
+        onPlanApplied={loadSchedule}
       />
     </div>
   );

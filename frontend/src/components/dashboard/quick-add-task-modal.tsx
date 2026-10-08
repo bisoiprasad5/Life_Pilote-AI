@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { tasksApi, CreateTaskPayload } from '@/lib/tasks-api';
-import { Sparkles, Calendar, Clock, Tag, Flag, Plus, Trash2, Loader2 } from 'lucide-react';
+import { aiApi } from '@/lib/ai-api';
+import { Sparkles, Calendar, Clock, Tag, Flag, Plus, Trash2, Loader2, Wand2 } from 'lucide-react';
 
 interface QuickAddTaskModalProps {
   isOpen: boolean;
@@ -16,6 +17,8 @@ export function QuickAddTaskModal({
   onClose,
   onTaskCreated,
 }: QuickAddTaskModalProps) {
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isAiParsing, setIsAiParsing] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<CreateTaskPayload['category']>('WORK');
@@ -28,6 +31,29 @@ export function QuickAddTaskModal({
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleAiAutofill = async () => {
+    if (!aiPrompt.trim()) return;
+    setIsAiParsing(true);
+    setError(null);
+    try {
+      const res = await aiApi.parseTask(aiPrompt.trim());
+      if (res.task) {
+        setTitle(res.task.title);
+        if (res.task.category) setCategory(res.task.category);
+        if (res.task.priority) setPriority(res.task.priority);
+        if (res.task.date) setDate(res.task.date);
+        if (res.task.startTime || res.task.time) setStartTime(res.task.startTime || res.task.time || '');
+        if (res.task.endTime) setEndTime(res.task.endTime);
+        if (res.task.duration) setEstimatedDuration(res.task.duration);
+        if (res.task.notes) setDescription(res.task.notes);
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'AI parsing failed');
+    } finally {
+      setIsAiParsing(false);
+    }
+  };
 
   const handleAddSubtask = () => {
     if (newSubtaskTitle.trim()) {
@@ -91,6 +117,38 @@ export function QuickAddTaskModal({
             {error}
           </div>
         )}
+
+        {/* AI Magic Fill Input */}
+        <div className="p-3 rounded-2xl bg-purple-950/30 border border-purple-500/30 space-y-2">
+          <label className="flex items-center gap-1.5 text-purple-300 font-bold text-[11px]">
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            AI Natural Language Autofill
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="e.g., 'Study Java DSA tomorrow at 7 PM for 1 hour'"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAiAutofill();
+                }
+              }}
+              className="flex-1 px-3 py-2 rounded-xl bg-slate-900/80 border border-purple-500/30 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-1 focus:ring-purple-400"
+            />
+            <button
+              type="button"
+              onClick={handleAiAutofill}
+              disabled={isAiParsing || !aiPrompt.trim()}
+              className="px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-semibold text-xs flex items-center gap-1 cursor-pointer transition-all flex-shrink-0"
+            >
+              {isAiParsing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+              <span>Autofill</span>
+            </button>
+          </div>
+        </div>
 
         {/* Title */}
         <div>

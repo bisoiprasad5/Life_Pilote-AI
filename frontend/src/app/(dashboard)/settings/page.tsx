@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import { useTheme } from '@/lib/theme-context';
 import {
@@ -18,7 +18,20 @@ import {
   Loader2,
   Shield,
   User,
+  Volume2,
+  Flame,
+  Utensils,
+  BookOpen,
+  GraduationCap,
+  Target,
+  AlertTriangle,
 } from 'lucide-react';
+import { notificationsApi, NotificationPreferences } from '@/lib/notifications-api';
+import {
+  requestBrowserNotificationPermission,
+  getBrowserNotificationPermission,
+  showBrowserNotification,
+} from '@/lib/browser-notifications';
 
 export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
@@ -26,7 +39,7 @@ export default function SettingsPage() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const { theme, setTheme } = useTheme();
 
-  const [activeTab, setActiveTab] = useState<'GENERAL' | 'PRODUCTIVITY' | 'ROUTINES'>('GENERAL');
+  const [activeTab, setActiveTab] = useState<'GENERAL' | 'PRODUCTIVITY' | 'ROUTINES' | 'NOTIFICATIONS'>('GENERAL');
 
   // Form states
   const [fullName, setFullName] = useState(user?.fullName || '');
@@ -51,6 +64,51 @@ export default function SettingsPage() {
     user?.preference?.nightReviewTime ?? '21:30',
   );
 
+  // Notification states
+  const [browserPermission, setBrowserPermission] = useState<NotificationPermission>('default');
+  const [browserEnabled, setBrowserEnabled] = useState(true);
+  const [upcomingTask, setUpcomingTask] = useState(true);
+  const [taskStarting, setTaskStarting] = useState(true);
+  const [overdueTask, setOverdueTask] = useState(true);
+  const [deadlineApproaching, setDeadlineApproaching] = useState(true);
+  const [habitReminder, setHabitReminder] = useState(true);
+  const [waterReminder, setWaterReminder] = useState(true);
+  const [mealReminder, setMealReminder] = useState(true);
+  const [studyReminder, setStudyReminder] = useState(true);
+  const [examReminder, setExamReminder] = useState(true);
+  const [goalReminder, setGoalReminder] = useState(true);
+  const [defaultTiming, setDefaultTiming] = useState('15_MINUTES');
+  const [quietHoursEnabled, setQuietHoursEnabled] = useState(false);
+  const [quietHoursStart, setQuietHoursStart] = useState('22:00');
+  const [quietHoursEnd, setQuietHoursEnd] = useState('07:00');
+
+  useEffect(() => {
+    setBrowserPermission(getBrowserNotificationPermission());
+    async function loadNotifPrefs() {
+      try {
+        const prefs = await notificationsApi.getPreferences();
+        if (prefs) {
+          setBrowserEnabled(prefs.browserEnabled ?? true);
+          setUpcomingTask(prefs.upcomingTask ?? true);
+          setTaskStarting(prefs.taskStarting ?? true);
+          setOverdueTask(prefs.overdueTask ?? true);
+          setDeadlineApproaching(prefs.deadlineApproaching ?? true);
+          setHabitReminder(prefs.habitReminder ?? true);
+          setWaterReminder(prefs.waterReminder ?? true);
+          setMealReminder(prefs.mealReminder ?? true);
+          setStudyReminder(prefs.studyReminder ?? true);
+          setExamReminder(prefs.examReminder ?? true);
+          setGoalReminder(prefs.goalReminder ?? true);
+          setDefaultTiming(prefs.defaultTiming || '15_MINUTES');
+          setQuietHoursEnabled(prefs.quietHoursEnabled ?? false);
+          if (prefs.quietHoursStart) setQuietHoursStart(prefs.quietHoursStart);
+          if (prefs.quietHoursEnd) setQuietHoursEnd(prefs.quietHoursEnd);
+        }
+      } catch {}
+    }
+    loadNotifPrefs();
+  }, []);
+
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -70,7 +128,26 @@ export default function SettingsPage() {
         dailyWaterTargetMl: Number(dailyWaterTargetMl),
         defaultPomodoroLength: Number(defaultPomodoroLength),
       });
-      setFeedback({ type: 'success', text: 'Settings updated and synchronized successfully!' });
+
+      await notificationsApi.updatePreferences({
+        browserEnabled,
+        upcomingTask,
+        taskStarting,
+        overdueTask,
+        deadlineApproaching,
+        habitReminder,
+        waterReminder,
+        mealReminder,
+        studyReminder,
+        examReminder,
+        goalReminder,
+        defaultTiming,
+        quietHoursEnabled,
+        quietHoursStart,
+        quietHoursEnd,
+      });
+
+      setFeedback({ type: 'success', text: 'Settings and notification preferences synchronized successfully!' });
     } catch {
       // Local optimistic fallback
       if (typeof window !== 'undefined') {
@@ -129,16 +206,17 @@ export default function SettingsPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
         {[
           { key: 'GENERAL', label: 'General & Appearance' },
           { key: 'PRODUCTIVITY', label: 'Focus & Health' },
           { key: 'ROUTINES', label: 'AI Routines & Briefings' },
+          { key: 'NOTIFICATIONS', label: 'Smart Notifications' },
         ].map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key as any)}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
               activeTab === tab.key
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
@@ -348,6 +426,296 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: SMART NOTIFICATIONS */}
+        {activeTab === 'NOTIFICATIONS' && (
+          <div className="space-y-6">
+            {/* Browser Notifications & Engine Status */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm dark:shadow-lg space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-blue-500" />
+                    Browser Notifications & Background Engine
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Powered by BullMQ and Redis. Reminders execute at exact trigger timestamps with zero polling.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
+                      browserPermission === 'granted'
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                        : browserPermission === 'denied'
+                        ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                    }`}
+                  >
+                    Permission: {browserPermission.toUpperCase()}
+                  </span>
+
+                  {browserPermission !== 'granted' && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const perm = await requestBrowserNotificationPermission();
+                        setBrowserPermission(perm);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+                    >
+                      Enable Browser Alerts
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      showBrowserNotification('LifePilot AI Test Alert', {
+                        body: 'Smart Notifications and BullMQ background jobs are connected!',
+                      });
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Volume2 className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Test Alert</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    Browser Push Notifications
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Display native OS popups even when working in another tab or window.
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={browserEnabled}
+                  onChange={(e) => setBrowserEnabled(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Notification Timing Presets */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm dark:shadow-lg space-y-4">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-indigo-500" />
+                  Default Reminder Lead Time
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  How far in advance should LifePilot trigger smart notifications before deadlines and tasks.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                {[
+                  { key: '5_MINUTES', label: '5 minutes' },
+                  { key: '10_MINUTES', label: '10 minutes' },
+                  { key: '15_MINUTES', label: '15 minutes' },
+                  { key: '30_MINUTES', label: '30 minutes' },
+                  { key: '1_HOUR', label: '1 hour' },
+                  { key: '1_DAY', label: '1 day' },
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setDefaultTiming(item.key)}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-semibold border text-center transition-all cursor-pointer ${
+                      defaultTiming === item.key
+                        ? 'border-blue-600 bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-sm font-bold'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Supported Categories (10 categories toggles) */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm dark:shadow-lg space-y-4">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-500" />
+                  Notification Categories (Enable / Disable)
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Control which life and productivity domains generate background jobs and alert popups.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {[
+                  {
+                    title: 'Upcoming Task',
+                    desc: 'Scheduled tasks with upcoming dates and times',
+                    icon: Clock,
+                    color: 'text-blue-500',
+                    checked: upcomingTask,
+                    setter: setUpcomingTask,
+                  },
+                  {
+                    title: 'Task Starting',
+                    desc: 'Immediate reminder when scheduled task start time arrives',
+                    icon: Sparkles,
+                    color: 'text-indigo-500',
+                    checked: taskStarting,
+                    setter: setTaskStarting,
+                  },
+                  {
+                    title: 'Overdue Task',
+                    desc: 'Alerts when overdue tasks require immediate action',
+                    icon: AlertTriangle,
+                    color: 'text-amber-500',
+                    checked: overdueTask,
+                    setter: setOverdueTask,
+                  },
+                  {
+                    title: 'Deadline Approaching',
+                    desc: 'Prioritized urgency warning before project/task deadlines',
+                    icon: AlertTriangle,
+                    color: 'text-rose-500',
+                    checked: deadlineApproaching,
+                    setter: setDeadlineApproaching,
+                  },
+                  {
+                    title: 'Habit Reminder',
+                    desc: 'Daily streak check-ins for active habits and routines',
+                    icon: Flame,
+                    color: 'text-orange-500',
+                    checked: habitReminder,
+                    setter: setHabitReminder,
+                  },
+                  {
+                    title: 'Water Reminder',
+                    desc: 'Recurring hydration pings to achieve daily water target',
+                    icon: Droplets,
+                    color: 'text-cyan-500',
+                    checked: waterReminder,
+                    setter: setWaterReminder,
+                  },
+                  {
+                    title: 'Meal Reminder',
+                    desc: 'Timely reminders for planned breakfast, lunch, and dinner',
+                    icon: Utensils,
+                    color: 'text-emerald-500',
+                    checked: mealReminder,
+                    setter: setMealReminder,
+                  },
+                  {
+                    title: 'Study Reminder',
+                    desc: 'Topic review schedule and focused deep work blocks',
+                    icon: BookOpen,
+                    color: 'text-purple-500',
+                    checked: studyReminder,
+                    setter: setStudyReminder,
+                  },
+                  {
+                    title: 'Exam Reminder',
+                    desc: 'Milestone countdowns before critical tests and exams',
+                    icon: GraduationCap,
+                    color: 'text-red-500',
+                    checked: examReminder,
+                    setter: setExamReminder,
+                  },
+                  {
+                    title: 'Goal Reminder',
+                    desc: 'Progress check-in for quarterly milestones and life goals',
+                    icon: Target,
+                    color: 'text-teal-500',
+                    checked: goalReminder,
+                    setter: setGoalReminder,
+                  },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.title}
+                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between gap-3 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-8 h-8 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center flex-shrink-0 shadow-sm ${item.color}`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                            {item.title}
+                          </p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            {item.desc}
+                          </p>
+                        </div>
+                      </div>
+
+                      <input
+                        type="checkbox"
+                        checked={item.checked}
+                        onChange={(e) => item.setter(e.target.checked)}
+                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 flex-shrink-0 cursor-pointer"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Quiet Hours */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm dark:shadow-lg space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-slate-500" />
+                    Quiet Hours
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Suppress sound and push alerts during your sleep or focus periods.
+                  </p>
+                </div>
+
+                <input
+                  type="checkbox"
+                  checked={quietHoursEnabled}
+                  onChange={(e) => setQuietHoursEnabled(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                />
+              </div>
+
+              {quietHoursEnabled && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      Quiet Period Starts
+                    </label>
+                    <input
+                      type="time"
+                      value={quietHoursStart}
+                      onChange={(e) => setQuietHoursStart(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      Quiet Period Ends
+                    </label>
+                    <input
+                      type="time"
+                      value={quietHoursEnd}
+                      onChange={(e) => setQuietHoursEnd(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
